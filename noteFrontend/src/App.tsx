@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState,useCallback } from 'react';
 import axios from 'axios';
-
 
 interface Note {
   _id: string;
@@ -9,89 +8,83 @@ interface Note {
 }
 
 const App = () => {
-  const [tasks, setTasks] = useState<Note[]>([]);
-  const [newTask, setNewTask] = useState({ title: '', content: '' });
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [newNote, setNewNote] = useState({ title: '', content: '' });
 
-  // Fetch tasks from the backend
-  const backendURL =  'http://localhost:5000/api/v1';
-
-  const fetchTasks = async () => {
+  const backendURL = process.env.REACT_APP_BACKENDURL || 'http://localhost:5000/api/v1';
+  
+  const fetchNotes = useCallback(async () => {
     try {
       const response = await axios.get(`${backendURL}/getNote`);
-      setTasks(response.data.Notes); // Assuming response.data is an array of notes
+      setNotes(response.data.Notes);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error('Error fetching notes:', error);
     }
-  };
+  }, [backendURL]);
 
-  // Add a new task
-  const addTask = async () => {
+  const addNote = async () => {
     try {
-      const response = await axios.post(`${backendURL}/addNote`, newTask);
-      setTasks([...tasks, response.data]); // Append the new task to the state
-      setNewTask({ title: '', content: '' }); // Reset the input fields
+      const response = await axios.post(`${backendURL}/addNote`, newNote);
+      setNotes([...notes, response.data]); 
+      setNewNote({ title: '', content: '' });
     } catch (error) {
-      console.error('Error adding task:', error);
+      console.error('Error adding note:', error);
     }
   };
 
-  // Delete a task by id
-  const deleteTask = async (id: string) => {
+  const deleteNote = async (id: string) => {
     try {
       await axios.delete(`${backendURL}/deleteNote/${id}`);
-      setTasks(tasks.filter((task) => task._id !== id)); // Remove the task from the state
+      setNotes(notes.filter((note) => note._id !== id)); 
     } catch (error) {
-      console.error('Error deleting task:', error);
+      console.error('Error deleting note:', error);
     }
   };
 
-  // Fetch tasks on component mount
   useEffect(() => {
-    fetchTasks();
-  }, []);
-  console.log(tasks);
-  
+    fetchNotes();
+  }, [fetchNotes]);
+
   return (
     <div className="container mx-auto p-5">
-      <h1 className="text-3xl font-bold text-center mb-6">Task Manager</h1>
+      <h1 className="text-3xl font-bold text-center mb-6">Note Manager</h1>
 
-      {/* Add new task */}
       <div className="bg-white shadow-md rounded-lg p-5 mb-6">
-        <h2 className="text-2xl font-semibold mb-4">Add Task</h2>
+        <h2 className="text-2xl font-semibold mb-4">Add Note</h2>
         <input
           type="text"
-          placeholder="Task Title"
-          value={newTask.title}
-          onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+          placeholder="Note Title"
+          value={newNote.title}
+          onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
           className="border border-gray-300 rounded p-2 w-full mb-2"
         />
         <textarea
-          placeholder="Task Content"
-          value={newTask.content}
-          onChange={(e) => setNewTask({ ...newTask, content: e.target.value })}
+          placeholder="Note Content"
+          value={newNote.content}
+          onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
           className="border border-gray-300 rounded p-2 w-full mb-4"
         />
         <button 
-          onClick={addTask}
+          onClick={addNote}
           className="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600"
         >
-          Add Task
+          Add Note
         </button>
       </div>
 
-      {/* List of tasks */}
+      {/* List of notes */}
       <div className="bg-white shadow-md rounded-lg p-5">
-        <h2 className="text-2xl font-semibold mb-4">Tasks</h2>
-        {tasks.length === 0 ? (
-          <p>No tasks available.</p>
+        <h2 className="text-2xl font-semibold mb-4">Notes</h2>
+        {notes.length === 0 ? (
+          <p>No notes available.</p>
         ) : (
           <ul>
-            {tasks?.map((task) => (
-              <li key={task._id} className="border-b border-gray-300 py-4">
-                <h3 className="text-xl font-semibold">{task.title}</h3>
-                <p className="text-gray-700 mb-2">{task.content}</p>
+            {notes.map((note) => (
+              <li key={note._id} className="border-b border-gray-300 py-4">
+                <h3 className="text-xl font-semibold">{note.title}</h3>
+                <p className="text-gray-700 mb-2">{note.content}</p>
                 <button 
-                  onClick={() => deleteTask(task._id)}
+                  onClick={() => deleteNote(note._id)}
                   className="bg-red-500 text-white font-semibold py-1 px-3 rounded hover:bg-red-600"
                 >
                   Delete
