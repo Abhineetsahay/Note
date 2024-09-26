@@ -17,6 +17,8 @@ const App = () => {
     try {
       const response = await axios.get(`${backendURL}/getNote`);
       setNotes(response.data.Notes);
+      console.log(notes);
+      
     } catch (error) {
       console.error('Error fetching notes:', error);
     }
